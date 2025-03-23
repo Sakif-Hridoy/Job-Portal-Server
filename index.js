@@ -31,7 +31,12 @@ async function run() {
 
 
     app.get("/jobs",async(req,res)=>{
-        const cursor = jobsCollection.find();
+      const email  = req.query.email;
+      let query = {};
+      if(email){
+        query = {hr_email:email}
+      }
+        const cursor = jobsCollection.find(query);
         const result = await cursor.toArray();
         res.send(result)
     })
@@ -49,7 +54,7 @@ async function run() {
       const query = {applicant_email:email};
       const result = await jobApplicationsCollection.find(query).toArray();
       for(const application of result){
-        console.log(application.job_id)
+        // console.log(application.job_id)
         const query1 = {_id : new ObjectId(application.job_id)};
         const job = await jobsCollection.findOne(query1);
         if(job){
@@ -59,14 +64,40 @@ async function run() {
           application.title = job.title;
           application.category = job.category;
         }
-        res.send(result)
       }
+      res.send(result)
     })
 
     app.post("/job-application",async(req,res)=>{
       const newApplication = req.body;
       const result = await jobApplicationsCollection.insertOne(newApplication);
-      res.send(result);
+
+      const id = newApplication.job_id;
+      const query2 = { _id: new ObjectId(id) };
+      const jobApplication = await jobsCollection.findOne(query2);
+      // console.log(jobApplication)
+      let newCount = 0;
+
+      if(jobApplication.applicationCount){
+        newCount = jobApplication.applicationCount + 1 
+      }
+      else{
+        newCount = 1
+      }
+      const filter = { _id: new ObjectId(id)};
+      const updatedJob = {
+        $set:{
+          applicationCount: newCount
+        }
+      }
+      const updateResult = await jobsCollection.updateOne(filter,updatedJob);
+      res.send(result) 
+    })
+
+    app.post("/jobs",async(req,res)=>{
+      const newJob = req.body;
+      const result = await jobsCollection.insertOne(newJob);
+      res.send(result)
       console.log(result)
     })
 
@@ -78,6 +109,10 @@ async function run() {
     // await client.close();
   }
 }
+
+app.get("/",async(req,res)=>{
+  res.send("Hello Express")
+})
 run().catch(console.dir);
 
 app.listen(port,()=>{
