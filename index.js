@@ -57,9 +57,10 @@ async function run() {
 
     app.post("/jwt", async (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user,process.env.JWT_SECRET,{
+      const token = await jwt.sign(user,process.env.JWT_SECRET,{
         expiresIn: "5h",
       });
+      console.log('first created',token)
       res
         .cookie("token",token, {
           httpOnly: true,
@@ -67,6 +68,13 @@ async function run() {
         })
         .send({ success: true });
     });
+
+    app.post('/logout',(req,res)=>{
+      res.clearCookie('token',{
+        httpOnly:true,
+        secure:false
+      }).send({success:true})
+    })
 
     app.get("/jobs", async (req, res) => {
       const email = req.query.email;
@@ -138,12 +146,12 @@ async function run() {
       const newJob = req.body;
       const result = await jobsCollection.insertOne(newJob);
       res.send(result);
-      console.log(result);
+      // console.log(result);
     });
 
     app.get("/job-applications/jobs/:job_id", async (req, res) => {
       const jobId = req.params.job_id;
-      console.log(jobId);
+      // console.log(jobId);
       const query = { job_id: jobId };
       const result = await jobApplicationsCollection.find(query).toArray();
       res.send(result);
