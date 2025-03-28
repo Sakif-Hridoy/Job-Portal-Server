@@ -105,7 +105,7 @@ async function run() {
     });
 
     //all jobs route
-    app.get("/jobs",verifyApiKey, async (req, res) => {
+    app.get("/jobs", async (req, res) => {
       const email = req?.query?.email;
       let query = {};
       if (email) {
