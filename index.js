@@ -11,7 +11,7 @@ dotenv.config();
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: ["https://extraordinary-nougat-7831ff.netlify.app","http://localhost:5173", "http://localhost:5174"],
     credentials: true,
     allowedHeaders: ["x-api-key", "Content-Type", "Authorization"], // Ensure x-api-key is allowed
   })
