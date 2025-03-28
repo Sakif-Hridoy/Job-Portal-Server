@@ -23,7 +23,7 @@ app.use(cookieParser());
 
 // jwt verify middleware
 const verifyToken = (req, res, next) => {
-  const token = req?.cookies?.token;
+  const token = req.cookies?.token;
   console.log("verify token", token);
   if (!token) {
     res.status(401).send({ message: "Unauthorized Access" });
@@ -89,7 +89,7 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false,
+          secure: true,
         })
         .send({ success: true });
     });
@@ -99,7 +99,7 @@ async function run() {
       res
         .clearCookie("token", {
           httpOnly: true,
-          secure: false,
+          secure: true,
         })
         .send({ success: true });
     });
