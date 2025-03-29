@@ -1,6 +1,9 @@
 # Job Portal
-# user email - sakif@mail.com
-# password - abc123
+
+# Sign In with this to watch all features
+
+user email - sakif@mail.com
+password - abc123
 
 A Job Portal web application that allows candidates to view and apply for jobs and enables recruiters to post job listings and manage applications. The platform supports both candidate and recruiter functionalities, but currently, there is no separation between the two roles and also some addtional options like Delete etc is under working.
 
