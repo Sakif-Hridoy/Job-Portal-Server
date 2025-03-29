@@ -1,6 +1,6 @@
 # Job Portal
 
-A Job Portal web application that allows candidates to view and apply for jobs and enables recruiters to post job listings and manage applications. The platform supports both candidate and recruiter functionalities, but currently, there is no separation between the two roles and also some actions like delete data is under working.
+A Job Portal web application that allows candidates to view and apply for jobs and enables recruiters to post job listings and manage applications. The platform supports both candidate and recruiter functionalities, but currently, there is no separation between the two roles and also some addtional options like Delete etc is under working.
 
 ### Features
 
@@ -71,6 +71,11 @@ A Job Portal web application that allows candidates to view and apply for jobs a
 - **CORS Configuration:**
   - CORS configuration to allow frontend (Netlify) to securely communicate with the backend (Render) using cookies and credentials.
 
+- **Recruiter Features:**
+  - A recruiter can view the jobs they have posted.
+  - A recruiter can see the applications for their posted jobs and view detailed information about applicants.
+  - A recruiter can update the status of applications, such as marking them as "hire," "interview," or "reject."
+
 ---
 
 ## Deployment Features
@@ -84,3 +89,13 @@ A Job Portal web application that allows candidates to view and apply for jobs a
 - **Environment Variables:**
   - API keys and secret keys are stored securely in environment variables for both frontend and backend.
 
+---
+
+## Installation
+
+### Frontend (React)
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/job-portal.git
+   cd job-portal
