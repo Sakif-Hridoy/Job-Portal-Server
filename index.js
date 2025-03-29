@@ -105,7 +105,7 @@ async function run() {
     });
 
     //all jobs route
-    app.get("/jobs",verifyToken, async (req, res) => {
+    app.get("/jobs",async (req, res) => {
       const email = req?.query?.email;
       let query = {};
       if (email) {
@@ -126,7 +126,7 @@ async function run() {
 
     // get all job applications by token and user email verified
     // join another mongodb collection and show mutual collections data
-    app.get("/job-applications", verifyToken, async (req, res) => {
+    app.get("/job-applications", verifyToken,verifyApiKey, async (req, res) => {
       const email = req.query.email;
       if (req.user.email !== email) {
        return res.status(403).send({ message: "forbidden access" });
