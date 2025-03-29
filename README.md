@@ -1,6 +1,6 @@
 # Job Portal
 
-A Job Portal web application that allows candidates to view and apply for jobs and enables recruiters to post job listings and manage applications. The platform supports both candidate and recruiter functionalities, but currently, there is no separation between the two roles.
+A Job Portal web application that allows candidates to view and apply for jobs and enables recruiters to post job listings and manage applications. The platform supports both candidate and recruiter functionalities, but currently, there is no separation between the two roles and also some actions like delete data is under working.
 
 ### Features
 
