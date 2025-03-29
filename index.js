@@ -89,7 +89,7 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: true,
+          secure: false,
         })
         .send({ success: true });
     });
@@ -99,13 +99,13 @@ async function run() {
       res
         .clearCookie("token", {
           httpOnly: true,
-          secure: true,
+          secure: false,
         })
         .send({ success: true });
     });
 
     //all jobs route
-    app.get("/jobs", async (req, res) => {
+    app.get("/jobs",verifyToken,verifyApiKey, async (req, res) => {
       const email = req?.query?.email;
       let query = {};
       if (email) {
@@ -127,11 +127,12 @@ async function run() {
     // get all job applications by token and user email verified
     // join another mongodb collection and show mutual collections data
     app.get("/job-applications", verifyToken, async (req, res) => {
-      const email = req?.query?.email;
-      const query = { applicant_email: email };
+      const email = req.query.email;
       if (req.user.email !== email) {
-        res.status(403).send({ message: "forbidden access" });
+       return res.status(403).send({ message: "forbidden access" });
       }
+      const query = { applicant_email: email };
+
       const result = await jobApplicationsCollection.find(query).toArray();
       // console.log("cookies", req.cookies);
       for (const application of result) {
