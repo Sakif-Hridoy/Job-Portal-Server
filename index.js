@@ -11,38 +11,48 @@ dotenv.config();
 
 app.use(
   cors({
-    origin: ["https://extraordinary-nougat-7831ff.netlify.app","http://localhost:5173", "http://localhost:5174"],
+    origin: [
+      "https://extraordinary-nougat-7831ff.netlify.app", // Netlify domain
+      "http://localhost:5173", // Localhost development
+      "http://localhost:5174", // Localhost development
+    ],
     credentials: true,
     allowedHeaders: ["x-api-key", "Content-Type", "Authorization"], // Ensure x-api-key is allowed
   })
 );
 
+// Middleware to set security-related HTTP headers
+app.use((req, res, next) => {
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains"); // Enforces HTTPS
+  res.setHeader("X-Content-Type-Options", "nosniff"); // Prevent MIME type sniffing
+  res.setHeader("X-Frame-Options", "DENY"); // Prevent clickjacking
+  res.setHeader("X-XSS-Protection", "1; mode=block"); // Enable XSS filter
+  next();
+});
+
 app.use(express.json());
 app.use(cookieParser());
-
 
 // jwt verify middleware
 const verifyToken = (req, res, next) => {
   const token = req.cookies?.token;
   console.log("verify token", token);
   if (!token) {
-    res.status(401).send({ message: "Unauthorized Access" });
+    return res.status(401).send({ message: "Unauthorized Access" });
   }
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      res.status(401).send({ message: "Unauthorized Access" });
+      return res.status(401).send({ message: "Unauthorized Access" });
     }
     req.user = decoded;
+    next(); // Pass control to the next middleware or route handler
   });
-  next();
 };
-
 
 // x-api-key verify middleware
 const verifyApiKey = (req, res, next) => {
   const apiKey = req?.headers?.["x-api-key"];
   console.log(apiKey);
-  // console.log(req.headers);
 
   if (!apiKey) {
     return res.status(401).json({ message: "API Key Missing" });
@@ -55,8 +65,7 @@ const verifyApiKey = (req, res, next) => {
   next();
 };
 
-
-// mongodb connection string
+// MongoDB connection string
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.djg6r.mongodb.net/?appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -70,42 +79,41 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    // database and collections
+    // Database and collections
     const jobsCollection = client.db("job-portal").collection("jobs");
-    const jobApplicationsCollection = client
-      .db("job-portal")
-      .collection("job-applications");
+    const jobApplicationsCollection = client.db("job-portal").collection("job-applications");
 
-    // signin/login verification with jwt and x-api-key
-    app.post("/jwt",verifyApiKey, async (req, res) => {
+    // JWT login endpoint
+    app.post("/jwt", verifyApiKey, async (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.JWT_SECRET, {
         expiresIn: "5h",
       });
-      console.log("first created", token);
+      console.log("JWT Token Created: ", token);
       res
         .cookie("token", token, {
-          httpOnly: true,
-          secure: true,
+          httpOnly: true, // Prevents JavaScript from accessing the cookie
+          secure: true,  // Use true only in production (HTTPS)
+          sameSite: "Strict", // Prevents cross-site request forgery
         })
         .send({ success: true });
     });
 
-    // clear cookie when logout
+    // Logout (Clear cookie)
     app.post("/logout", (req, res) => {
       res
         .clearCookie("token", {
           httpOnly: true,
-          secure: true,
+          secure: true,  // Use true in production (HTTPS)
+          sameSite: "Strict",
         })
         .send({ success: true });
     });
 
-    //all jobs route
-    app.get("/jobs",async (req, res) => {
+    // All jobs route
+    app.get("/jobs", async (req, res) => {
       const email = req?.query?.email;
       let query = {};
       if (email) {
@@ -116,27 +124,23 @@ async function run() {
       res.send(result);
     });
 
-    //get a single job 
-    app.get("/jobs/:id",async (req, res) => {
+    // Get a single job
+    app.get("/jobs/:id", async (req, res) => {
       const id = req?.params?.id;
       const query = { _id: new ObjectId(id) };
       const result = await jobsCollection.findOne(query);
       res.send(result);
     });
 
-    // get all job applications by token and user email verified
-    // join another mongodb collection and show mutual collections data
-    app.get("/job-applications", verifyToken,verifyApiKey, async (req, res) => {
+    // Get all job applications by token and user email verification
+    app.get("/job-applications", verifyToken, verifyApiKey, async (req, res) => {
       const email = req.query.email;
       if (req.user.email !== email) {
-       return res.status(403).send({ message: "forbidden access" });
+        return res.status(403).send({ message: "Forbidden Access" });
       }
       const query = { applicant_email: email };
-
       const result = await jobApplicationsCollection.find(query).toArray();
-      // console.log("cookies", req.cookies);
       for (const application of result) {
-        // console.log(application.job_id)
         const query1 = { _id: new ObjectId(application.job_id) };
         const job = await jobsCollection.findOne(query1);
         if (job) {
@@ -150,51 +154,40 @@ async function run() {
       res.send(result);
     });
 
-    // post a job application
-    //count a users job application by joining two collections
-    app.post("/job-application",verifyToken,verifyApiKey,async (req, res) => {
+    // Post a job application
+    app.post("/job-application", verifyToken, verifyApiKey, async (req, res) => {
       const newApplication = req?.body;
       const result = await jobApplicationsCollection.insertOne(newApplication);
-
       const id = newApplication.job_id;
       const query2 = { _id: new ObjectId(id) };
       const jobApplication = await jobsCollection.findOne(query2);
-      // console.log(jobApplication)
-      let newCount = 0;
-
-      if (jobApplication.applicationCount) {
-        newCount = jobApplication.applicationCount + 1;
-      } else {
-        newCount = 1;
-      }
+      let newCount = jobApplication.applicationCount ? jobApplication.applicationCount + 1 : 1;
       const filter = { _id: new ObjectId(id) };
       const updatedJob = {
         $set: {
           applicationCount: newCount,
         },
       };
-      const updateResult = await jobsCollection.updateOne(filter, updatedJob);
+      await jobsCollection.updateOne(filter, updatedJob);
       res.send(result);
     });
 
-    // post a job/ by recruiter
-    app.post("/job",verifyApiKey,verifyToken, async (req, res) => {
+    // Post a job by recruiter
+    app.post("/job", verifyApiKey, verifyToken, async (req, res) => {
       const newJob = req?.body;
       const result = await jobsCollection.insertOne(newJob);
       res.send(result);
-      // console.log(result);
     });
 
-    // get job applications by user job_id
+    // Get job applications by user job_id
     app.get("/job-applications/jobs/:job_id", async (req, res) => {
       const jobId = req?.params?.job_id;
-      // console.log(jobId);
       const query = { job_id: jobId };
       const result = await jobApplicationsCollection.find(query).toArray();
       res.send(result);
     });
 
-    // update a job application
+    // Update a job application
     app.patch("/job-applications/:id", async (req, res) => {
       const id = req?.params?.id;
       const data = req.body;
@@ -204,29 +197,25 @@ async function run() {
           status: data.status,
         },
       };
-      const result = await jobApplicationsCollection.updateOne(
-        filter,
-        updateDoc
-      );
+      const result = await jobApplicationsCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
-    // Send a ping to confirm a successful connection
+    // Ping to confirm successful connection to MongoDB
     await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    console.log("Successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
-    // await client.close();
   }
 }
 
+// Default route
 app.get("/", async (req, res) => {
   res.send("Hello Express");
 });
+
 run().catch(console.dir);
 
 app.listen(port, () => {
-  console.log(`Server is Running on ${port}`);
+  console.log(`Server is running on ${port}`);
 });
