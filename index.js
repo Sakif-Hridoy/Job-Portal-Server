@@ -96,7 +96,8 @@ async function run() {
         .cookie("token", token, {
           httpOnly: true, // Prevents JavaScript from accessing the cookie
           secure: true,  // Use true only in production (HTTPS)
-          sameSite: "Strict", // Prevents cross-site request forgery
+          sameSite: "None", // Prevents cross-site request forgery
+          path:"/"
         })
         .send({ success: true });
     });
@@ -107,7 +108,9 @@ async function run() {
         .clearCookie("token", {
           httpOnly: true,
           secure: true,  // Use true in production (HTTPS)
-          sameSite: "Strict",
+          sameSite: "None",
+          path:"/",
+
         })
         .send({ success: true });
     });
