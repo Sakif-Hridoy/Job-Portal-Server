@@ -98,7 +98,7 @@ A Job Portal web application that allows candidates to view and apply for jobs a
 
 ## Installation
 
-### Frontend (React)
+### Backend (Node,Express,MongoDB)
 
 1. Clone the repository:
    ```bash
