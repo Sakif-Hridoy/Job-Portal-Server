@@ -12,7 +12,7 @@ dotenv.config();
 app.use(
   cors({
     origin: [
-      "https://extraordinary-nougat-7831ff.netlify.app", // Netlify domain
+      "https://ephemeral-gecko-d01bfa.netlify.app", // Netlify domain
       "http://localhost:5173", // Localhost development
       "http://localhost:5174", // Localhost development
     ],
