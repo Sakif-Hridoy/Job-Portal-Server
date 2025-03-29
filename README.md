@@ -102,5 +102,5 @@ A Job Portal web application that allows candidates to view and apply for jobs a
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/job-portal.git
+   git clone https://github.com/Sakif-Hridoy/Job-Portal-Server.git
    cd job-portal
